@@ -12,7 +12,7 @@ def get_wiki(npc: str, page: str) -> pd.Series:
 
     npcPattern = regex.compile(fr"\**\s?'''{npc}:'''\s?(.*)")
     sicPattern = re.compile(r"{{sic\|?[^}]*}}")
-    colourPattern = re.compile(r"{{[Cc]olou?r\|#(?:[0-9a-fA-F]{3}){1,2}\|(.[a-zA-Z]+)}}")
+    colourPattern = re.compile(r"{{[Cc]olou?r\|#(?:[0-9a-fA-F]{3}){1,2}\|(.\}+)}}")
 
     for i, line in enumerate(lines):
         if "{{overhead|" in line:
