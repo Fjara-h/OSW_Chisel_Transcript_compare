@@ -79,18 +79,9 @@ while exitInput != "q":
         
     chisel = get_chisel(npc)     
 
-    print(wiki
-        .merge(chisel, on='line', how='outer')
-        .assign(
-            line=lambda x: x['line'].fillna(''),
-            wiki=lambda x: x['wiki'].notna(), 
-            chisel=lambda x: x['chisel'].notna(),
-            count=lambda x: x['count'].fillna(0).astype(int)
-        )
-        .query('not (wiki and chisel)')
-        [['line', 'wiki', 'chisel', 'count']]
-        .sort_values('count', ascending=False)
-        .to_string()
-    )
+    output = wiki.merge(chisel, on='line', how='outer').assign(line=lambda x: x['line'].fillna(''), wiki=lambda x: x['wiki'].notna(), chisel=lambda x: x['chisel'].notna(), count=lambda x: x['count'].fillna(0).astype(int)).query('not (wiki and chisel)')[['line', 'wiki', 'chisel', 'count']].sort_values('count', ascending=False)
+        
+    print(output.shape[0])
+    print(output.to_string())
     exitInput = input("Enter q to exit or same to use repeat the previous:")
 
