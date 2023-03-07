@@ -1,7 +1,11 @@
 # OSW_Chisel_Transcript_compare
 Compare NPC dialogue crowdsourced dialogue against pages on the wiki
 
-#Requirements
+
+#Javascript
+I use ViolentMonkey, it should work on Grease/Tamper.
+
+#Python requirements
 
 beautifulsoup4==4.11.2
 
