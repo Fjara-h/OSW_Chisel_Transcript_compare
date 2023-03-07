@@ -11,32 +11,6 @@
 const linebreak = document.createElement('br');
 const npcName = document.URL.substring(document.URL.lastIndexOf("/") + 1);
 
-function flatten(array, mutable) {
-    var toString = Object.prototype.toString;
-    var arrayTypeStr = '[object Array]';
-
-    var result = [];
-    var nodes = (mutable && array) || array.slice();
-    var node;
-
-    if (!array.length) {
-        return result;
-    }
-
-    node = nodes.pop();
-
-    do {
-        if (toString.call(node) === arrayTypeStr) {
-            nodes.push.apply(nodes, node);
-        } else {
-            result.push(node);
-        }
-    } while (nodes.length && (node = nodes.pop()) !== undefined);
-
-    result.reverse(); // we reverse result to restore the original order
-    return result;
-}
-
 // Should I make the unique chisel table have count and links?
 function generateTable(page, list){
   let table = document.createElement('table');
@@ -203,10 +177,9 @@ function main() {
       dialogueLists[i] = dialogueLists[i].filter(onlyUnique);
       generateTable(pageList[i], dialogueLists[i].filter((o) => chiselList.indexOf(o) === -1));
     }
-    //let wikiDialogue = flatten(dialogueLists);
-    console.log(dialogueLists)
-    //wikiDialogue = wikiDialogue.filter(onlyUnique);
-    //generateTable('UniqueChiselDialogue', chiselList.filter((o) => wikiDialogue.indexOf(o) === -1));
+    let wikiDialogue = dialogueLists.flat(1);
+    wikiDialogue = wikiDialogue.filter(onlyUnique);
+    generateTable('UniqueChiselDialogue', chiselList.filter((o) => wikiDialogue.indexOf(o) === -1));
   });
   body.insertBefore(runButton, OriginalChiselTable);
 
