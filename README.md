@@ -1,6 +1,7 @@
 # OSW_Chisel_Transcript_compare
-Compare NPC dialogue crowdsourced dialogue against pages on the wiki
+Compare NPC dialogue crowdsourced dialogue from Chisel against transcript pages on the wiki.
 
+Download the js or python file to use/import.
 
 # Javascript
 I use ViolentMonkey, it should work on Grease/Tamper.
