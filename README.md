@@ -2,10 +2,10 @@
 Compare NPC dialogue crowdsourced dialogue against pages on the wiki
 
 
-#Javascript
+# Javascript
 I use ViolentMonkey, it should work on Grease/Tamper.
 
-#Python requirements
+# Python requirements
 
 beautifulsoup4==4.11.2
 
