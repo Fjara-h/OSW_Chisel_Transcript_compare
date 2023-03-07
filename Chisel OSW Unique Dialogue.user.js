@@ -2,7 +2,7 @@
 // @name        Chisel OSW Unique Dialogue
 // @namespace   http://chisel.weirdgloop.org
 // @match       https://chisel.weirdgloop.org/dialogue/npcs/*
-// @grant       GM_addStyle
+// @grant       none
 // @version     1.0
 // @author      Fjara
 // @description Sort Chisel and OSW transcript pages into list of uniques
