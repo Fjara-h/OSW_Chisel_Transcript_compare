@@ -31,10 +31,6 @@ function removeOldTables(transcriptPages){
   }
 }
 
-function onlyUnique(value, index, array) {
-  return self.indexOf(value) === index;
-}
-
 function getChiselDialgue() {
   let ret = [];
   let rows = document.getElementById("OriginalChiselTable").rows;
@@ -51,11 +47,14 @@ function filterLists(lists){
   for(let i = 0, max = lists.length; i < max; i++){
     let lateJoiners = [];
     for(let j = 0, maxTwo = lists[i].length; j < maxTwo; j++){
-      if(lists[i][j].indexOf("'''" + npcName + ":'''") == true){
-        let npcDialogueString = new RegExp("\*+\s?'{3}" + npcName + "'{3}:\s?");
+      if(lists[i][j].indexOf("'''" + npcName + ":'''") == -1){
+        lists[i][j] = ""
+      }
+      if(lists[i][j].indexOf("'''" + npcName + ":'''") >= 0){
+        let npcDialogueString = new RegExp("\*+\s?'''" + npcName + "''':\s?");
         lists[i][j] = lists[i][j].replace(npcDialogueString, "");
       }
-      if(lists[i][j].indexOf("{{overhead|") == true){
+      if(lists[i][j].indexOf("{{overhead|") >= 0){
         lists[i][j] = "";
       }
       lists[i][j] = lists[i][j].replace('[player name]', '%USERNAME%');
@@ -165,21 +164,25 @@ function main() {
   let runButton = document.createElement("button");
   runButton.type = "text";
   runButton.innerHTML = "Run Uniques";
-  runButton.addEventListener("click", function() {
+  runButton.addEventListener("click", async function() {
     let pageList = getInputList();
     createSectionHeaders(pageList);
-    let dialogueLists = getPageText(pageList);
+    let dialogueLists = await getPageText(pageList);
     dialogueLists = filterLists(dialogueLists);
+    console.log(dialogueLists);//
     removeOldTables(pageList);
     removeOldTables(['UniqueChisel']);
     let chiselList = getChiselDialgue();
     for(let i = 0; i < dialogueLists.length; i++){
-      dialogueLists[i] = dialogueLists[i].filter(onlyUnique);
+      dialogueLists[i] = dialogueLists[i].filter((value, index, array) => array.indexOf(value) === index);
       generateTable(pageList[i], dialogueLists[i].filter((o) => chiselList.indexOf(o) === -1));
     }
     let wikiDialogue = dialogueLists.flat(1);
-    wikiDialogue = wikiDialogue.filter(onlyUnique);
-    generateTable('UniqueChiselDialogue', chiselList.filter((o) => wikiDialogue.indexOf(o) === -1));
+    wikiDialogue = wikiDialogue.filter((value, index, array) => array.indexOf(value) === index);
+    //console.log(wikiDialogue);
+    //console.log(chiselList);
+    //console.log(chiselList.filter(n => !wikiDialogue.includes(n)));
+    generateTable('UniqueChiselDialogue', chiselList.filter(n => !wikiDialogue.includes(n)));//this isnt joining right
   });
   body.insertBefore(runButton, OriginalChiselTable);
 
