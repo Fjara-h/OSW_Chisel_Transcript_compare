@@ -9,12 +9,12 @@
 // ==/UserScript==
 
 const linebreak = document.createElement('br');
-const npcName = document.URL.substring(document.URL.lastIndexOf("/") + 1);
+const npcName = decodeURI(document.URL).substring(document.URL.lastIndexOf("/") + 1);
 
 // Should I make the unique chisel table have count and links?
 function generateTable(page, list){
   let table = document.createElement('table');
-  table.setAttribute('name', page + "Table");
+  table.setAttribute('id', page + "Table");
   for(let i = 0; i < list.length; i++){
     const tr = table.insertRow();
     const td = tr.insertCell();
@@ -26,6 +26,7 @@ function generateTable(page, list){
 function removeOldTables(transcriptPages){
   for(let i = 0; i < transcriptPages.length; i++){
     if(document.contains(document.getElementById(transcriptPages[i] + "Table"))) {
+
       document.getElementById(transcriptPages[i] + "Table").remove();
     }
   }
@@ -40,37 +41,47 @@ function getChiselDialgue() {
   return ret;
 }
 
+// Deletes or modifies lines that aren't related or in chisel
 function filterLists(lists){
-  let numberRange = document.getElementById("numberRangeCheckbox").value;
-  let numberReplace = document.getElementById("numberReplaceCheckbox").value;
-  let ret = new Array(lists.length);
-  for(let i = 0, max = lists.length; i < max; i++){
+  let numberRange = document.getElementById("numberRangeCheckbox").checked;
+  let numberReplace = document.getElementById("numberReplaceCheckbox").checked;
+  for(let i = 0; i < lists.length; i++){
     let lateJoiners = [];
-    for(let j = 0, maxTwo = lists[i].length; j < maxTwo; j++){
-      if(lists[i][j].indexOf("'''" + npcName + ":'''") == -1){
+    for(let j = 0; j < lists[i].length; j++){
+      // Only use lines starting with the npc name that is speaking
+      if(lists[i][j].includes("'''" + npcName + ":'''")){
+        let npcDialogueString = new RegExp("\\*+ ?'''" + npcName + ":''' ?");
+        lists[i][j] = lists[i][j].replace(npcDialogueString, "");
+      } else {
         lists[i][j] = ""
       }
-      if(lists[i][j].indexOf("'''" + npcName + ":'''") >= 0){
-        let npcDialogueString = new RegExp("\*+\s?'''" + npcName + "''':\s?");
-        lists[i][j] = lists[i][j].replace(npcDialogueString, "");
-      }
-      if(lists[i][j].indexOf("{{overhead|") >= 0){
+      // Overheads arent in chisel
+      if(lists[i][j].includes("{{overhead|")){
         lists[i][j] = "";
+      }
+      // Colour template is not in chisel, but the text itself is
+      if(/\{\{[Cc]olou?r\|/.test(lists[i][j])){//Need to handle background colours in the template if they happen
+        lists[i][j] = lists[i][j].replace(/\{\{[Cc]olou?r\|[^\|]*\|([^\}]+)\}\}/, "$1");
       }
       lists[i][j] = lists[i][j].replace('[player name]', '%USERNAME%');
       const sicRegex = /\{\{sic\|?[^\}]*\}\}/i;
+      // Sic template is wiki only
       lists[i][j] = lists[i][j].replace(sicRegex, '');
       lists[i][j] = lists[i][j].trim();
-      const numberRangeRegex = /\[(\d+)\s?[–−‐]\s?(\d+)\]/;
-      let numRanges = numberRangeRegex.exec(lists[i][j]);
-      if(numRanges){
-        for(let k = numRanges[1]; k <= numRanges[2]; k++){
-          lateJoiners.push(lists[i][j].replace(numberRangeRegex, k));
+      // Some numbers have ranges (See Rantz) on chisel usually input on the wiki as [500-549]
+      let numRanges = lists[i][j].match(/\[[\d,]+ ?[-–−‐] ?[\d,]+\]/);
+      if(numRanges !== null && numberRange){
+        for(let k = 0; k < numRanges.length; k++){
+          nums = numRanges[k].match(/[\d,]+/g);
+          for(let m = Number(nums[0].replace(",", "")); m <= Number(nums[1].replace(",", "")); m++){
+            lateJoiners.push(lists[i][j].replace(numRanges[k], m));
+          }
         }
         lists[i][j] = "";
       }
+      // Sometimes other numbers are entirely replaced with %NUMBER% on chisel.
       if(numberReplace){
-        lists[i][j] = lists[i][j].replace(/\d+/, "%NUMBER%");
+        lists[i][j] = lists[i][j].replace(/\d+/g, "%NUMBER%");
       }
     }
     lists[i] = lists[i].concat(lateJoiners);
@@ -78,6 +89,7 @@ function filterLists(lists){
   return lists;
 }
 
+// Get the raw transcript dialogue on the wiki and return it as an array, each element is a newline
 async function getResponseLines(url){
   let response = await fetch(url, {method: 'POST'});
   let lines = await response.text();
@@ -96,6 +108,7 @@ async function getPageText(transcriptPages){
   return ret;
 }
 
+// Grab text from the input boxes to use as transcript page names
 function getInputList(){
   let ret = [];
   let inputs = document.getElementsByName("textinput");
@@ -169,20 +182,18 @@ function main() {
     createSectionHeaders(pageList);
     let dialogueLists = await getPageText(pageList);
     dialogueLists = filterLists(dialogueLists);
-    console.log(dialogueLists);//
     removeOldTables(pageList);
-    removeOldTables(['UniqueChisel']);
+    removeOldTables(['UniqueChiselDialogue']);
     let chiselList = getChiselDialgue();
     for(let i = 0; i < dialogueLists.length; i++){
       dialogueLists[i] = dialogueLists[i].filter((value, index, array) => array.indexOf(value) === index);
+      // Display dialouge on the wiki that doesn't exist on chisel
       generateTable(pageList[i], dialogueLists[i].filter((o) => chiselList.indexOf(o) === -1));
     }
     let wikiDialogue = dialogueLists.flat(1);
     wikiDialogue = wikiDialogue.filter((value, index, array) => array.indexOf(value) === index);
-    //console.log(wikiDialogue);
-    //console.log(chiselList);
-    //console.log(chiselList.filter(n => !wikiDialogue.includes(n)));
-    generateTable('UniqueChiselDialogue', chiselList.filter(n => !wikiDialogue.includes(n)));//this isnt joining right
+    // Display dialouge on chisel that doesn't exist on the wiki
+    generateTable('UniqueChiselDialogue', chiselList.filter(n => !wikiDialogue.includes(n)));// Is this filtering correctly
   });
   body.insertBefore(runButton, OriginalChiselTable);
 
