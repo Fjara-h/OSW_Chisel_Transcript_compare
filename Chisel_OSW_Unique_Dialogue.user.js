@@ -9,7 +9,6 @@
 // ==/UserScript==
 
 //TODO Unique Chisel dialogue should also link to the related pages.
-///
 
 const linebreak = document.createElement('br');
 const npcName = decodeURI(document.URL).substring(document.URL.lastIndexOf("/") + 1).replace("_", " ");
@@ -27,8 +26,8 @@ function generateTable(page, list){
 
 function removeOldTables(transcriptPages){
   for(let i = 0; i < transcriptPages.length; i++){
-    if(document.contains(document.getElementById(transcriptPages[i] + "Table"))) {
-
+    if(document.getElementById(transcriptPages[i] + "Table")) {
+console.log(transcriptPages[i]);
       document.getElementById(transcriptPages[i] + "Table").remove();
     }
   }
@@ -50,7 +49,6 @@ function filterLists(lists){
   let numberReplace = document.getElementById("numberReplaceCheckbox").checked;
   for(let i = 0; i < lists.length; i++){
     let lateJoiners = [];
-    console.log(lists);
     for(let j = 0; j < lists[i].length; j++){
       // Only use lines starting with the npc name that is speaking
       if(lists[i][j].includes("'''" + npcName + ":'''")){
@@ -200,6 +198,7 @@ function main() {
     createSectionHeaders(pageList);
     let dialogueLists = await getPageText(pageList);
     dialogueLists = filterLists(dialogueLists);
+    removeOldTables(pageList);
     removeOldTables(['UniqueChiselDialogue']);
     let chiselList = getChiselDialgue();
     for(let i = 0; i < dialogueLists.length; i++){
