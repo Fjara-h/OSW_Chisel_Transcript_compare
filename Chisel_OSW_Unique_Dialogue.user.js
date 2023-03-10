@@ -2,14 +2,14 @@
 // @name        Chisel OSW Unique Dialogue
 // @namespace   http://chisel.weirdgloop.org
 // @match       https://chisel.weirdgloop.org/dialogue/npcs/*
-// @grant       none
+// @grant       GM_addStyle
 // @version     1.0
 // @author      Fjara
 // @description Sort Chisel and OSW transcript pages into list of uniques
 // ==/UserScript==
-
+//white-space:pre-wrap;
 const linebreak = document.createElement('br');
-const npcName = decodeURI(document.URL).substring(document.URL.lastIndexOf("/") + 1);
+const npcName = decodeURI(document.URL).substring(document.URL.lastIndexOf("/") + 1).replace("_", " ");
 
 // Should I make the unique chisel table have count and links?
 function generateTable(page, list){
@@ -36,6 +36,7 @@ function getChiselDialgue() {
   let ret = [];
   let rows = document.getElementById("OriginalChiselTable").rows;
   for(let i = 1; i < rows.length; i++){
+    document.getElementById('OriginalChiselTable').getElementsByTagName('tr')[8].getElementsByTagName('td')[0].innerText;
     ret.push(rows[i].cells[0].innerText);
   }
   return ret;
@@ -47,6 +48,7 @@ function filterLists(lists){
   let numberReplace = document.getElementById("numberReplaceCheckbox").checked;
   for(let i = 0; i < lists.length; i++){
     let lateJoiners = [];
+    console.log(lists);
     for(let j = 0; j < lists[i].length; j++){
       // Only use lines starting with the npc name that is speaking
       if(lists[i][j].includes("'''" + npcName + ":'''")){
@@ -80,7 +82,7 @@ function filterLists(lists){
         lists[i][j] = "";
       }
       // Sometimes other numbers are entirely replaced with %NUMBER% on chisel.
-      if(numberReplace){
+      if(numberReplace){ // have numberreplace deal with ranges if ranges is false
         lists[i][j] = lists[i][j].replace(/\d+/g, "%NUMBER%");
       }
     }
@@ -163,6 +165,8 @@ function main() {
 
   console.log('running Chisel OSW Unique Dialogue');
 
+  // This stops lines from messing with duplicate white spaces.
+  GM_addStyle("tr { white-space: pre; }");
   // Do I ever need to request the NPC name to be input?
 
   let body = document.getElementsByTagName("body")[0];
@@ -170,7 +174,7 @@ function main() {
   originalTable.setAttribute('id', 'OriginalChiselTable');
 
   let originalHeader = document.createElement("h2");
-  originalHeader.innerHTML = "Original Chisel Dialogue";
+  originalHeader.innerHTML = "Original Chisel Dialogue for " + npcName;
   originalHeader.setAttribute('id', "OriginalChiselDialogueHeader");
   body.insertBefore(originalHeader, originalTable);
 
@@ -182,12 +186,11 @@ function main() {
     createSectionHeaders(pageList);
     let dialogueLists = await getPageText(pageList);
     dialogueLists = filterLists(dialogueLists);
-    removeOldTables(pageList);
     removeOldTables(['UniqueChiselDialogue']);
     let chiselList = getChiselDialgue();
     for(let i = 0; i < dialogueLists.length; i++){
       dialogueLists[i] = dialogueLists[i].filter((value, index, array) => array.indexOf(value) === index);
-      // Display dialouge on the wiki that doesn't exist on chisel
+      // Display dialogue on the wiki that doesn't exist on chisel
       generateTable(pageList[i], dialogueLists[i].filter((o) => chiselList.indexOf(o) === -1));
     }
     let wikiDialogue = dialogueLists.flat(1);
