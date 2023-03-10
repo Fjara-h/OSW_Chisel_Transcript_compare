@@ -7,11 +7,13 @@
 // @author      Fjara
 // @description Sort Chisel and OSW transcript pages into list of uniques
 // ==/UserScript==
-//white-space:pre-wrap;
+
+//TODO Unique Chisel dialogue should also link to the related pages.
+///
+
 const linebreak = document.createElement('br');
 const npcName = decodeURI(document.URL).substring(document.URL.lastIndexOf("/") + 1).replace("_", " ");
 
-// Should I make the unique chisel table have count and links?
 function generateTable(page, list){
   let table = document.createElement('table');
   table.setAttribute('id', page + "Table");
@@ -82,8 +84,13 @@ function filterLists(lists){
         lists[i][j] = "";
       }
       // Sometimes other numbers are entirely replaced with %NUMBER% on chisel.
-      if(numberReplace){ // have numberreplace deal with ranges if ranges is false
-        lists[i][j] = lists[i][j].replace(/\d+/g, "%NUMBER%");
+      /// If numberRange isn't active, replace ranges with %NUMBER% as well.
+      if(numberReplace){
+        if(!numberRange){
+          lists[i][j] = lists[i][j].replace(/\[[\d,]+ ?[-–−‐] ?[\d,]+\]/, "%NUMBER%");
+        } else {
+          lists[i][j] = lists[i][j].replace(/\d+/g, "%NUMBER%");
+        }
       }
     }
     lists[i] = lists[i].concat(lateJoiners);
@@ -122,18 +129,19 @@ function getInputList(){
   return ret;
 }
 
-function addNewTextInput(){
+function addNewTextInput(text){
   let body = document.getElementsByTagName("body")[0];
   let originalTable = document.getElementsByTagName("table")[0];
   let textInput = document.createElement("input");
   textInput.setAttribute('name', "textinput");
   textInput.type = "text";
+  textInput.value = text;
 
   body.insertBefore(linebreak.cloneNode(true), OriginalChiselTable);
   body.insertBefore(textInput, OriginalChiselTable);
 }
 
-//make thewiki tables link to the pages?
+
 function createSectionHeaders(transcriptPages) {
   let body = document.getElementsByTagName("body")[0];
   if (!document.getElementById("UniqueChiselDialogueHeader")) {
@@ -152,8 +160,14 @@ function createSectionHeaders(transcriptPages) {
 
   transcriptPages.forEach(function(pageName) {
     if (!document.getElementById(pageName + "Header")) {
+      let wikiTranscriptPageLink = "https://oldschool.runescape.wiki/w/Transcript:" + pageName
+      let link = document.createElement('a');
+      link.appendChild(document.createTextNode(pageName));
+      link.title = pageName;
+      link.href = wikiTranscriptPageLink;
+      link.target = "_blank";
       let wikiTranscriptPageHeader = document.createElement("h3");
-      wikiTranscriptPageHeader.innerHTML = pageName;
+      wikiTranscriptPageHeader.appendChild(link);
       wikiTranscriptPageHeader.setAttribute('id', pageName + "Header");
       body.appendChild(wikiTranscriptPageHeader);
     }
@@ -226,11 +240,11 @@ function main() {
   addInputButton.type = "text";
   addInputButton.innerHTML = "+input";
   addInputButton.addEventListener ("click", function() {
-    addNewTextInput();
+    addNewTextInput("");
   });
   body.insertBefore(linebreak.cloneNode(true), OriginalChiselTable);
   body.insertBefore(addInputButton, OriginalChiselTable);
-  addNewTextInput();
+  addNewTextInput(npcName);
 }
 
 main();
