@@ -3,12 +3,15 @@
 // @namespace   http://chisel.weirdgloop.org
 // @match       https://chisel.weirdgloop.org/dialogue/npcs/*
 // @grant       GM_addStyle
-// @version     1.0
+// @version     1.2
 // @author      Fjara
 // @description Sort Chisel and OSW transcript pages into list of uniques
 // ==/UserScript==
 
 //TODO Unique Chisel dialogue should also link to the related pages.
+
+//Observatory professor color is mesed up
+const genderedTerms = [ ['lad', 'lass'] ];
 
 const linebreak = document.createElement('br');
 const npcName = decodeURI(document.URL).substring(document.URL.lastIndexOf("/") + 1).replace("_", " ");
@@ -27,7 +30,6 @@ function generateTable(page, list){
 function removeOldTables(transcriptPages){
   for(let i = 0; i < transcriptPages.length; i++){
     if(document.getElementById(transcriptPages[i] + "Table")) {
-console.log(transcriptPages[i]);
       document.getElementById(transcriptPages[i] + "Table").remove();
     }
   }
@@ -58,7 +60,7 @@ function filterLists(lists){
         lists[i][j] = ""
       }
       // Overheads arent in chisel
-      if(lists[i][j].includes("{{overhead|")){
+      if(lists[i][j].match(/\{\{overhead\|/)){ //  TypeError: Invalid type: first can't be a Regular Expression
         lists[i][j] = "";
       }
       // Colour template is not in chisel, but the text itself is
@@ -69,14 +71,16 @@ function filterLists(lists){
       const sicRegex = /\{\{sic\|?[^\}]*\}\}/i;
       // Sic template is wiki only
       lists[i][j] = lists[i][j].replace(sicRegex, '');
-      lists[i][j] = lists[i][j].trim();
+      const factRegex = /\{\{fact\|?[^\}]*\}\}/i;
+      // fact template is wiki only
+      lists[i][j] = lists[i][j].replace(factRegex, '');
       // Some numbers have ranges (See Rantz) on chisel usually input on the wiki as [500-549]
       let numRanges = lists[i][j].match(/\[[\d,]+ ?[-–−‐] ?[\d,]+\]/);
       if(numRanges !== null && numberRange){
         for(let k = 0; k < numRanges.length; k++){
           nums = numRanges[k].match(/[\d,]+/g);
           for(let m = Number(nums[0].replace(",", "")); m <= Number(nums[1].replace(",", "")); m++){
-            lateJoiners.push(lists[i][j].replace(numRanges[k], m));
+            lateJoiners.push(lists[i][j].replace(numRanges[k], m)); // Is this correct?
           }
         }
         lists[i][j] = "";
@@ -90,6 +94,17 @@ function filterLists(lists){
           lists[i][j] = lists[i][j].replace(/\d+/g, "%NUMBER%");
         }
       }
+      /*
+      // Try to catch and separate gendered lines - May be problem inputs with plurals/singulars
+      /// This currently only deals with the first captured gender because I don't know how to verify
+      ///// two matchse will be the same order of gendered words
+      let gendered = lists[i][j].match(/\[[^\/]*\/[^\/]*\]/); // Searches for [text/alttext]
+      if(gendered !== null){
+        let genderedWords = gendered[0].match(/\w+/g);
+        lateJoiners.push(lists[i][j].replace(gendered[0], genderedWords[0]));
+        lateJoiners.push(lists[i][j].replace(gendered[0], genderedWords[1]));
+        lists[i][j] = "";
+      }*/
     }
     lists[i] = lists[i].concat(lateJoiners);
   }
@@ -197,7 +212,7 @@ function main() {
     let pageList = getInputList();
     createSectionHeaders(pageList);
     let dialogueLists = await getPageText(pageList);
-    dialogueLists = filterLists(dialogueLists);
+    dialogueLists = filterLists(dialogueLists);//  TypeError: Invalid type: first can't be a Regular Expression
     removeOldTables(pageList);
     removeOldTables(['UniqueChiselDialogue']);
     let chiselList = getChiselDialgue();
