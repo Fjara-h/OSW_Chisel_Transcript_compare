@@ -3,9 +3,9 @@
 // @namespace   http://chisel.weirdgloop.org
 // @match       https://chisel.weirdgloop.org/dialogue/npcs/*
 // @grant       GM_addStyle
-// @version     1.2
+// @version     1.0
 // @author      Fjara
-// @description Sort Chisel and OSW transcript pages into list of uniques
+// @description Sort Chisel and OSW transcript pages into list of uniques https://github.com/Fjara-h/OSW_Chisel_Transcript_compare/tree/main
 // ==/UserScript==
 
 //TODO Unique Chisel dialogue should also link to the related pages.
